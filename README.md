@@ -12,6 +12,9 @@ Install [node.js](https://nodejs.org/en/download) and [pnpm](https://pnpm.io/ins
 
 `$ pnpm install <package>`: Installs new packages.
 
+`$ pnpm test`: Runs all tests. Automatically spins up a Firebase emulator for the duration of the tests, whose UI is
+    usually accessible at localhost:4000 (if this port is unavailable, check the logs for which port was used instead)
+
 `$ pnpm build`: Type-checks the project, then compiles it into a small number of minified js files that can be hosted 
     statically. The built project is written to ./dist.
 
