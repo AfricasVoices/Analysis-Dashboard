@@ -29,7 +29,6 @@ describe("Test the connection to the Firestore emulator is working", () => {
         "test": "test"
     }
 
-    // Check the Firestore emulator connection is working
     test("Can write a test document to the Firestore emulator", async () => {
         await assertSucceeds(setDoc(ref, docToWrite));
     });
