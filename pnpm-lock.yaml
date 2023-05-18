@@ -12,6 +12,9 @@ devDependencies:
   firebase-tools:
     specifier: ^12.0.0
     version: 12.0.0
+  prettier:
+    specifier: ^2.8.8
+    version: 2.8.8
   typescript:
     specifier: ^5.0.4
     version: 5.0.4
@@ -4057,6 +4060,12 @@ packages:
   /prelude-ls@1.1.2:
     resolution: {integrity: sha512-ESF23V4SKG6lVSGZgYNpbsiaAkdab6ZgOxe52p7+Kid3W3u3bxR4Vfd/o21dmN7jSt0IwgZ4v5MUd26FEtXE9w==}
     engines: {node: '>= 0.8.0'}
+    dev: true
+
+  /prettier@2.8.8:
+    resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
     dev: true
 
   /pretty-format@27.5.1:
