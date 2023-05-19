@@ -5,9 +5,9 @@ export class SnapshotPermissions {
      * Describes the permissions a user has for analysis snapshots.
      *
      * @param readAll Whether the user can read all the analysis snapshots.
-     * @param readTagTypes Which analysis snapshot tag types can be read e.g. ["final-analysis", "latest"]
+     * @param readTagCategories Which analysis snapshot tag categories can be read e.g. ["final-analysis", "latest"]
      */
-    constructor(public readAll: boolean, public readTagTypes: string[]) {}
+    constructor(public readAll: boolean, public readTagCategories: string[]) {}
 }
 
 /**
@@ -36,8 +36,8 @@ export const userConvertor: FirestoreDataConverter<User> = {
     toFirestore: (user: User): DocumentData => ({
         "userId": user.userId,
         "snapshot_permissions": {
-            "read-all": user.snapshotPermissions.readAll,
-            "read-tag-types": user.snapshotPermissions.readTagTypes
+            "read_all": user.snapshotPermissions.readAll,
+            "read_tag_categories": user.snapshotPermissions.readTagCategories
         },
         "file_permissions": Object.fromEntries(user.filePermissions.entries())
     }),
@@ -46,8 +46,8 @@ export const userConvertor: FirestoreDataConverter<User> = {
         return new User(
             data["userId"],
             new SnapshotPermissions(
-                data["snapshot_permissions"]["read-all"],
-                data["snapshot_permissions"]["read-tag-types"]
+                data["snapshot_permissions"]["read_all"],
+                data["snapshot_permissions"]["read_tag_categories"]
             ),
             new Map(Object.entries(data["file_permissions"]))
         );
