@@ -88,7 +88,8 @@ async function setUpDatabase() {
     await testEnv.clearFirestore();
 
     const admin = testEnv.unauthenticatedContext();
-    // @ts-ignore
+    // @ts-ignore because admin.firestore() returns the Firebase v8 type but Database expects the v9
+    // type. Both types are compatible with each other, just defined in different places.
     await writeTestDataToFirestore(admin.firestore());
 }
 
