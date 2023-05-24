@@ -7,8 +7,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "firebase emulators:exec --ui 'vitest'",
-    "format": "prettier --write '{index.html,src/**/*.{ts,css,html}}'",
-    "check-format": "prettier --check '{index.html,src/**/*.{ts,css,html}}'"
+    "format": "prettier --write '{index.html,{src,tests}/**/*.{ts,css,html}}'",
+    "check-format": "prettier --check '{index.html,{src,tests}/**/*.{ts,css,html}}'"
   },
   "author": "Africa's Voices Foundation",
   "license": "MIT",
