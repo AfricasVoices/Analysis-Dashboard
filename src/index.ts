@@ -3,7 +3,7 @@ import AuthController from "./auth/AuthController";
 
 // Initialize Firebase
 const firebaseApp = getFirebaseApp();
-const authController = new AuthController(firebaseApp);
+const authController: string = new AuthController(firebaseApp);
 
 authController.onSignedInUserChanged(user => {
     const signedInUserUI = document.getElementById("signed-in-user");
