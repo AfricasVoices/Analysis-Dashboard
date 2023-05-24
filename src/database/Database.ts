@@ -1,5 +1,8 @@
 import { doc, getDoc, Firestore } from "firebase/firestore";
 import SeriesUser, { userConvertor } from "./models/SeriesUser";
+import AnalysisSnapshot, {
+    analysisSnapshotConverter,
+} from "./models/AnalysisSnapshot";
 
 export default class Database {
     constructor(private firestore: Firestore) {}
@@ -17,6 +20,17 @@ export default class Database {
     ): Promise<SeriesUser | undefined> {
         const path = `series/${seriesId}/users/${email}`;
         const ref = doc(this.firestore, path).withConverter(userConvertor);
+        return (await getDoc(ref)).data();
+    }
+
+    async getAnalysisSnapshot(
+        seriesId: string,
+        snapshotId: string
+    ): Promise<AnalysisSnapshot | undefined> {
+        const path = `series/${seriesId}/snapshots/${snapshotId}`;
+        const ref = doc(this.firestore, path).withConverter(
+            analysisSnapshotConverter
+        );
         return (await getDoc(ref)).data();
     }
 }

@@ -1,19 +1,34 @@
-import { describe, beforeAll, test, expect } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import {
     assertFails,
+    assertSucceeds,
     initializeTestEnvironment,
     RulesTestContext,
 } from "@firebase/rules-unit-testing";
-import { Firestore, setDoc, doc } from "firebase/firestore";
+import {
+    doc,
+    Firestore,
+    FirestoreDataConverter,
+    setDoc,
+} from "firebase/firestore";
 import SeriesUser, {
     SnapshotPermissions,
     userConvertor,
 } from "../../src/database/models/SeriesUser";
 import Database from "../../src/database/Database";
 import fs from "fs";
+import AnalysisSnapshot, {
+    analysisSnapshotConverter,
+    AnalysisSnapshotTag,
+} from "../../src/database/models/AnalysisSnapshot";
 
 async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
-    const testDocs = [
+    type TestDoc<T> = {
+        path: string;
+        data: T;
+        convertor: FirestoreDataConverter<T>;
+    };
+    const testDocs: (TestDoc<SeriesUser> | TestDoc<AnalysisSnapshot>)[] = [
         {
             path: "series/series-1/users/user1@example.com",
             data: new SeriesUser(
@@ -21,7 +36,7 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
                 new SnapshotPermissions(true, []),
                 new Map()
             ),
-            converter: userConvertor,
+            convertor: userConvertor,
         },
         {
             path: "series/series-1/users/user2@example.com",
@@ -30,16 +45,26 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
                 new SnapshotPermissions(false, ["latest"]),
                 new Map()
             ),
-            converter: userConvertor,
+            convertor: userConvertor,
+        },
+        {
+            path: "series/series-1/snapshots/1",
+            data: new AnalysisSnapshot([], []),
+            convertor: analysisSnapshotConverter,
+        },
+        {
+            path: "series/series-1/snapshots/2",
+            data: new AnalysisSnapshot([], [new AnalysisSnapshotTag("latest")]),
+            convertor: analysisSnapshotConverter,
         },
     ];
 
     // Write all test docs in parallel
     await Promise.all(
         testDocs.map((testDoc) => {
-            const ref = doc(firestore, testDoc.path).withConverter(
-                testDoc.converter
-            );
+            const ref = doc(firestore, testDoc.path).withConverter<
+                SeriesUser | AnalysisSnapshot
+            >(testDoc.convertor);
             return setDoc(ref, testDoc.data);
         })
     );
@@ -105,6 +130,32 @@ describe.concurrent("Test Database", () => {
 
         test("A user can access their user document", async () => {
             const db = await getDatabaseForUser("user1@example.com");
+            await assertSucceeds(db.getUser("series-1", "user1@example.com"));
+        });
+
+        test("A user cannot access another user's user document", async () => {
+            const db = await getDatabaseForUser("user1@example.com");
+            await assertFails(db.getUser("series-1", "user2@example.com"));
+        });
+    });
+
+    describe.concurrent("Test analysis snapshot read permissions", () => {
+        test("A user with 'read-all' permissions can read all the analysis snapshots in a series", async () => {
+            const db = await getDatabaseForUser("user1@example.com");
+            await assertSucceeds(db.getAnalysisSnapshot("series-1", "1"));
+            await assertSucceeds(db.getAnalysisSnapshot("series-1", "2"));
+        });
+
+        test("A user with 'read-tag-categories' permissions only can only read snapshots that are tagged with one of those categories", async () => {
+            const db = await getDatabaseForUser("user2@example.com");
+            await assertFails(db.getAnalysisSnapshot("series-1", "1"));
+            await assertSucceeds(db.getAnalysisSnapshot("series-1", "2"));
+        });
+    });
+
+    describe.concurrent("Test Database get methods", () => {
+        test("Can correctly deserialize SeriesUsers", async () => {
+            const db = await getDatabaseForUser("user1@example.com");
             const user = await db.getUser("series-1", "user1@example.com");
             expect(user).toStrictEqual(
                 new SeriesUser(
@@ -115,9 +166,16 @@ describe.concurrent("Test Database", () => {
             );
         });
 
-        test("A user cannot access another user's user document", async () => {
+        test("Can correctly deserialize AnalysisSnapshots", async () => {
             const db = await getDatabaseForUser("user1@example.com");
-            await assertFails(db.getUser("series-1", "user2@example.com"));
+
+            const snapshot1 = await db.getAnalysisSnapshot("series-1", "1");
+            expect(snapshot1).toStrictEqual(new AnalysisSnapshot([], []));
+
+            const snapshot2 = await db.getAnalysisSnapshot("series-1", "2");
+            expect(snapshot2).toStrictEqual(
+                new AnalysisSnapshot([], [new AnalysisSnapshotTag("latest")])
+            );
         });
     });
 });
