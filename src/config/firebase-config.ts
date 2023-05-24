@@ -6,7 +6,7 @@ const firebaseConfig = {
     projectId: "avf-analysis-dashboard",
     storageBucket: "avf-analysis-dashboard.appspot.com",
     messagingSenderId: "537279672609",
-    appId: "1:537279672609:web:82beab7f2764e406600e60"
+    appId: "1:537279672609:web:82beab7f2764e406600e60",
 };
 
 let firebaseApp: FirebaseApp | null = null;

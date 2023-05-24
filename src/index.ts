@@ -5,7 +5,7 @@ import AuthController from "./auth/AuthController";
 const firebaseApp = getFirebaseApp();
 const authController = new AuthController(firebaseApp);
 
-authController.onSignedInUserChanged(user => {
+authController.onSignedInUserChanged((user) => {
     const signedInUserUI = document.getElementById("signed-in-user");
     if (signedInUserUI) {
         signedInUserUI.innerText = `Signed in as ${user.email}`;
