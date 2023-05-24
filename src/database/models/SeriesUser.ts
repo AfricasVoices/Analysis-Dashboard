@@ -18,7 +18,7 @@ export class SnapshotPermissions {
  */
 export type FilePermissions = Map<string, string[]>
 
-export default class User {
+export default class SeriesUser {
     /**
      * Represents an analysis dashboard user, for the purpose of controlling permissions to a series.
      *
@@ -32,8 +32,8 @@ export default class User {
     }
 }
 
-export const userConvertor: FirestoreDataConverter<User> = {
-    toFirestore: (user: User): DocumentData => ({
+export const userConvertor: FirestoreDataConverter<SeriesUser> = {
+    toFirestore: (user: SeriesUser): DocumentData => ({
         "userId": user.userId,
         "snapshot_permissions": {
             "read_all": user.snapshotPermissions.readAll,
@@ -41,9 +41,9 @@ export const userConvertor: FirestoreDataConverter<User> = {
         },
         "file_permissions": Object.fromEntries(user.filePermissions.entries())
     }),
-    fromFirestore: (snapshot: QueryDocumentSnapshot, options: SnapshotOptions): User => {
+    fromFirestore: (snapshot: QueryDocumentSnapshot, options: SnapshotOptions): SeriesUser => {
         const data = snapshot.data(options);
-        return new User(
+        return new SeriesUser(
             data["userId"],
             new SnapshotPermissions(
                 data["snapshot_permissions"]["read_all"],

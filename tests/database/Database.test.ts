@@ -1,7 +1,7 @@
 import { describe, beforeAll, test, expect } from "vitest";
 import { assertFails, initializeTestEnvironment, RulesTestContext } from "@firebase/rules-unit-testing";
 import { Firestore, setDoc, doc } from "firebase/firestore";
-import User, { SnapshotPermissions, userConvertor } from "../../src/database/models/User";
+import SeriesUser, { SnapshotPermissions, userConvertor } from "../../src/database/models/SeriesUser";
 import Database from "../../src/database/Database";
 import fs from "fs"
 
@@ -9,7 +9,7 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
     const testDocs = [
         {
             path: "series/series-1/users/user-1",
-            data: new User(
+            data: new SeriesUser(
                 "user-1",
                 new SnapshotPermissions(true, []),
                 new Map()
@@ -18,7 +18,7 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
         },
         {
             path: "series/series-1/users/user-2",
-            data: new User(
+            data: new SeriesUser(
                 "user-2",
                 new SnapshotPermissions(false, ["latest"]),
                 new Map()
@@ -85,7 +85,7 @@ describe.concurrent("Test Database", () => {
         test("A user can access their user document", async () => {
             const db = await getDatabaseForUserId("user-1")
             const user = await db.getUser("series-1", "user-1")
-            expect(user).toStrictEqual(new User(
+            expect(user).toStrictEqual(new SeriesUser(
                 "user-1",
                 new SnapshotPermissions(true, []),
                 new Map()
