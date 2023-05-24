@@ -1,5 +1,11 @@
 import { FirebaseApp } from "firebase/app";
-import { getAuth, Auth, User, signInWithRedirect, GoogleAuthProvider } from "firebase/auth";
+import {
+    getAuth,
+    Auth,
+    User,
+    signInWithRedirect,
+    GoogleAuthProvider,
+} from "firebase/auth";
 
 export default class AuthController {
     auth: Auth;
@@ -13,7 +19,7 @@ export default class AuthController {
      * This only observes signed-in users. If there is no user signed-in, it automatically redirects to a sign-in page.
      */
     onSignedInUserChanged(observer: (user: User) => void): void {
-        this.auth.onAuthStateChanged(user => {
+        this.auth.onAuthStateChanged((user) => {
             if (user === null) {
                 this.signIn();
             } else {
