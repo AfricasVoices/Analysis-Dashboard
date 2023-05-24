@@ -5,12 +5,12 @@ function loggedIn() {
 }
 
 function thisUser() {
-  return loggedIn() && request.auth.uid == resource.data.userId;
+  return loggedIn() && request.auth.token.email == resource.data.email;
 }
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{path=**}/users/{userId} {
+    match /{path=**}/users/{userEmail} {
       allow read: if thisUser();
     }
   }

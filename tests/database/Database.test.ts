@@ -8,18 +8,18 @@ import fs from "fs"
 async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
     const testDocs = [
         {
-            path: "series/series-1/users/user-1",
+            path: "series/series-1/users/user1@example.com",
             data: new SeriesUser(
-                "user-1",
+                "user1@example.com",
                 new SnapshotPermissions(true, []),
                 new Map()
             ),
             converter: userConvertor
         },
         {
-            path: "series/series-1/users/user-2",
+            path: "series/series-1/users/user2@example.com",
             data: new SeriesUser(
-                "user-2",
+                "user2@example.com",
                 new SnapshotPermissions(false, ["latest"]),
                 new Map()
             ),
@@ -34,7 +34,7 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
     }))
 }
 
-async function getUserContext(userId: string | null): Promise<RulesTestContext> {
+async function getUserContext(userEmail: string | null): Promise<RulesTestContext> {
     const testEnv = await initializeTestEnvironment({
         projectId: "avf-dashboards-test",
         firestore: {
@@ -42,11 +42,11 @@ async function getUserContext(userId: string | null): Promise<RulesTestContext> 
         },
     })
 
-    return userId ? testEnv.authenticatedContext(userId) : testEnv.unauthenticatedContext()
+    return userEmail ? testEnv.authenticatedContext(userEmail.split("@")[0]!, {email: userEmail}) : testEnv.unauthenticatedContext()
 }
 
-async function getDatabaseForUserId(userId: string | null): Promise<Database> {
-    const userContext = await getUserContext(userId)
+async function getDatabaseForUser(userEmail: string | null): Promise<Database> {
+    const userContext = await getUserContext(userEmail)
     // @ts-ignore because userContext.firestore() returns the Firebase v8 type but Database expects the v9
     // type. Both types are compatible with each other, just defined in different places.
     const firestore: Firestore = userContext.firestore()
@@ -77,24 +77,24 @@ describe.concurrent("Test Database", () => {
 
     describe.concurrent("Test user document read permissions", () => {
         test("An unauthenticated user cannot access any user documents", async () => {
-            const db = await getDatabaseForUserId(null);
-            await assertFails(db.getUser("series-1", "user-1"))
-            await assertFails(db.getUser("series-1", "user-2"))
+            const db = await getDatabaseForUser(null);
+            await assertFails(db.getUser("series-1", "user1@example.com"))
+            await assertFails(db.getUser("series-1", "user2@example.com"))
         });
 
         test("A user can access their user document", async () => {
-            const db = await getDatabaseForUserId("user-1")
-            const user = await db.getUser("series-1", "user-1")
+            const db = await getDatabaseForUser("user1@example.com")
+            const user = await db.getUser("series-1", "user1@example.com")
             expect(user).toStrictEqual(new SeriesUser(
-                "user-1",
+                "user1@example.com",
                 new SnapshotPermissions(true, []),
                 new Map()
             ))
         })
 
         test("A user cannot access another user's user document", async () => {
-            const db = await getDatabaseForUserId("user-1");
-            await assertFails(db.getUser("series-1", "user-2"))
+            const db = await getDatabaseForUser("user1@example.com");
+            await assertFails(db.getUser("series-1", "user2@example.com"))
         })
     })
 })

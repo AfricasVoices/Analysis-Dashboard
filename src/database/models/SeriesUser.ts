@@ -22,11 +22,11 @@ export default class SeriesUser {
     /**
      * Represents an analysis dashboard user, for the purpose of controlling permissions to a series.
      *
-     * @param userId Id of this user in Firebase Auth.
+     * @param email User's email address.
      * @param snapshotPermissions Describes the permissions for accessing different categories of analysis snapshot.
      * @param filePermissions Describes the permissions for accessing files listed in a snapshot.
      */
-    constructor(public userId: string, public snapshotPermissions: SnapshotPermissions,
+    constructor(public email: string, public snapshotPermissions: SnapshotPermissions,
                 public filePermissions: FilePermissions) {
 
     }
@@ -34,7 +34,7 @@ export default class SeriesUser {
 
 export const userConvertor: FirestoreDataConverter<SeriesUser> = {
     toFirestore: (user: SeriesUser): DocumentData => ({
-        "userId": user.userId,
+        "email": user.email,
         "snapshot_permissions": {
             "read_all": user.snapshotPermissions.readAll,
             "read_tag_categories": user.snapshotPermissions.readTagCategories
@@ -44,7 +44,7 @@ export const userConvertor: FirestoreDataConverter<SeriesUser> = {
     fromFirestore: (snapshot: QueryDocumentSnapshot, options: SnapshotOptions): SeriesUser => {
         const data = snapshot.data(options);
         return new SeriesUser(
-            data["userId"],
+            data["email"],
             new SnapshotPermissions(
                 data["snapshot_permissions"]["read_all"],
                 data["snapshot_permissions"]["read_tag_categories"]

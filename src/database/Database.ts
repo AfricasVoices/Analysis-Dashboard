@@ -5,14 +5,14 @@ export default class Database {
     constructor(private firestore: Firestore) {}
 
     /**
-     * Gets the user object for the given series and user id.
+     * Gets the user object for the given series and user email.
      *
      * @param seriesId
-     * @param userId
+     * @param email
      * @return User object, if it exists, otherwise undefined.
      */
-    async getUser(seriesId: string, userId: string): Promise<SeriesUser | undefined> {
-        const path = `series/${seriesId}/users/${userId}`
+    async getUser(seriesId: string, email: string): Promise<SeriesUser | undefined> {
+        const path = `series/${seriesId}/users/${email}`
         const ref = doc(this.firestore, path).withConverter(userConvertor)
         return (await getDoc(ref)).data()
     }
