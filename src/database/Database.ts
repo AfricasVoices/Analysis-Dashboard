@@ -1,4 +1,4 @@
-import {doc, getDoc, Firestore} from "firebase/firestore"
+import { doc, getDoc, Firestore } from "firebase/firestore";
 import SeriesUser, { userConvertor } from "./models/SeriesUser";
 
 export default class Database {
@@ -11,9 +11,12 @@ export default class Database {
      * @param email
      * @return User object, if it exists, otherwise undefined.
      */
-    async getUser(seriesId: string, email: string): Promise<SeriesUser | undefined> {
-        const path = `series/${seriesId}/users/${email}`
-        const ref = doc(this.firestore, path).withConverter(userConvertor)
-        return (await getDoc(ref)).data()
+    async getUser(
+        seriesId: string,
+        email: string
+    ): Promise<SeriesUser | undefined> {
+        const path = `series/${seriesId}/users/${email}`;
+        const ref = doc(this.firestore, path).withConverter(userConvertor);
+        return (await getDoc(ref)).data();
     }
 }

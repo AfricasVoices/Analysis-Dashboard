@@ -1,4 +1,9 @@
-import { FirestoreDataConverter, QueryDocumentSnapshot, SnapshotOptions, DocumentData } from "firebase/firestore"
+import {
+    FirestoreDataConverter,
+    QueryDocumentSnapshot,
+    SnapshotOptions,
+    DocumentData,
+} from "firebase/firestore";
 
 export class SnapshotPermissions {
     /**
@@ -16,7 +21,7 @@ export class SnapshotPermissions {
  *
  * For example: Map("participants.csv" -> ["read"])
  */
-export type FilePermissions = Map<string, string[]>
+export type FilePermissions = Map<string, string[]>;
 
 export default class SeriesUser {
     /**
@@ -26,22 +31,26 @@ export default class SeriesUser {
      * @param snapshotPermissions Describes the permissions for accessing different categories of analysis snapshot.
      * @param filePermissions Describes the permissions for accessing files listed in a snapshot.
      */
-    constructor(public email: string, public snapshotPermissions: SnapshotPermissions,
-                public filePermissions: FilePermissions) {
-
-    }
+    constructor(
+        public email: string,
+        public snapshotPermissions: SnapshotPermissions,
+        public filePermissions: FilePermissions
+    ) {}
 }
 
 export const userConvertor: FirestoreDataConverter<SeriesUser> = {
     toFirestore: (user: SeriesUser): DocumentData => ({
-        "email": user.email,
-        "snapshot_permissions": {
-            "read_all": user.snapshotPermissions.readAll,
-            "read_tag_categories": user.snapshotPermissions.readTagCategories
+        email: user.email,
+        snapshot_permissions: {
+            read_all: user.snapshotPermissions.readAll,
+            read_tag_categories: user.snapshotPermissions.readTagCategories,
         },
-        "file_permissions": Object.fromEntries(user.filePermissions.entries())
+        file_permissions: Object.fromEntries(user.filePermissions.entries()),
     }),
-    fromFirestore: (snapshot: QueryDocumentSnapshot, options: SnapshotOptions): SeriesUser => {
+    fromFirestore: (
+        snapshot: QueryDocumentSnapshot,
+        options: SnapshotOptions
+    ): SeriesUser => {
         const data = snapshot.data(options);
         return new SeriesUser(
             data["email"],
@@ -51,5 +60,5 @@ export const userConvertor: FirestoreDataConverter<SeriesUser> = {
             ),
             new Map(Object.entries(data["file_permissions"]))
         );
-    }
-}
+    },
+};
