@@ -55,11 +55,14 @@ async function getUserContext(
         },
     });
 
-    return userEmail
-        ? testEnv.authenticatedContext(userEmail.split("@")[0]!, {
-              email: userEmail,
-          })
-        : testEnv.unauthenticatedContext();
+    if (userEmail === null) {
+        return testEnv.unauthenticatedContext();
+    }
+
+    const userId = userEmail.split("@")[0]!;
+    return testEnv.authenticatedContext(userId, {
+        email: userEmail,
+    });
 }
 
 async function getDatabaseForUser(userEmail: string | null): Promise<Database> {
