@@ -5,7 +5,6 @@ import {
     DocumentData,
 } from "firebase/firestore";
 
-
 export default class Series {
     /**
      * Represents the parent document for all analysis done within a series.

@@ -91,7 +91,7 @@ export default class Database {
      */
     async getSeries(seriesId: string): Promise<Series | undefined> {
         const path = `series/${seriesId}`;
-        const ref = doc(this.firestore, path).withConverter(seriesConvertor)
-        return (await getDoc(ref)).data()
+        const ref = doc(this.firestore, path).withConverter(seriesConvertor);
+        return (await getDoc(ref)).data();
     }
 }

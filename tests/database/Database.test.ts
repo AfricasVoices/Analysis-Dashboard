@@ -29,7 +29,11 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
         data: T;
         convertor: FirestoreDataConverter<T>;
     };
-    const testDocs: (TestDoc<SeriesUser> | TestDoc<AnalysisSnapshot> | TestDoc<Series>)[] = [
+    const testDocs: (
+        | TestDoc<SeriesUser>
+        | TestDoc<AnalysisSnapshot>
+        | TestDoc<Series>
+    )[] = [
         {
             path: "series/series-1",
             data: new Series(
@@ -38,7 +42,7 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
                 "Test Project",
                 "Pool-Test"
             ),
-            convertor: seriesConvertor
+            convertor: seriesConvertor,
         },
         {
             path: "series/series-1/users/user1@example.com",
@@ -209,16 +213,18 @@ describe.concurrent("Test Database", () => {
             expect(all).toStrictEqual([expected1, expected2]);
         });
 
-        test("Can correctly deserialize Series", async() => {
+        test("Can correctly deserialize Series", async () => {
             const db = await getDatabaseForUser("user1@example.com");
-            const series = await db.getSeries("series-1")
+            const series = await db.getSeries("series-1");
 
-            expect(series).toStrictEqual(new Series(
-                "test-series",
-                "Test Series",
-                "Test Project",
-                "Pool-Test"
-            ))
-        })
+            expect(series).toStrictEqual(
+                new Series(
+                    "test-series",
+                    "Test Series",
+                    "Test Project",
+                    "Pool-Test"
+                )
+            );
+        });
     });
 });
