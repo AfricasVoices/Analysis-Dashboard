@@ -88,6 +88,7 @@ export default class Database {
      * Gets the specified Series.
      *
      * @param seriesId
+     * @return Series object, if it exists, otherwise undefined.
      */
     async getSeries(seriesId: string): Promise<Series | undefined> {
         const path = `series/${seriesId}`;
