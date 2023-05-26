@@ -21,6 +21,7 @@ import AnalysisSnapshot, {
     analysisSnapshotConverter,
     AnalysisSnapshotTag,
 } from "../../src/database/models/AnalysisSnapshot";
+import Series, { seriesConvertor } from "../../src/database/models/Series";
 
 async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
     type TestDoc<T> = {
@@ -28,7 +29,17 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
         data: T;
         convertor: FirestoreDataConverter<T>;
     };
-    const testDocs: (TestDoc<SeriesUser> | TestDoc<AnalysisSnapshot>)[] = [
+    const testDocs: (TestDoc<SeriesUser> | TestDoc<AnalysisSnapshot> | TestDoc<Series>)[] = [
+        {
+            path: "series/series-1",
+            data: new Series(
+                "test-series",
+                "Test Series",
+                "Test Project",
+                "Pool-Test"
+            ),
+            convertor: seriesConvertor
+        },
         {
             path: "series/series-1/users/user1@example.com",
             data: new SeriesUser(
@@ -63,7 +74,7 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
     await Promise.all(
         testDocs.map((testDoc) => {
             const ref = doc(firestore, testDoc.path).withConverter<
-                SeriesUser | AnalysisSnapshot
+                SeriesUser | AnalysisSnapshot | Series
             >(testDoc.convertor);
             return setDoc(ref, testDoc.data);
         })
@@ -197,5 +208,17 @@ describe.concurrent("Test Database", () => {
             const all = await db.getAnalysisSnapshots("series-1");
             expect(all).toStrictEqual([expected1, expected2]);
         });
+
+        test("Can correctly deserialize Series", async() => {
+            const db = await getDatabaseForUser("user1@example.com");
+            const series = await db.getSeries("series-1")
+
+            expect(series).toStrictEqual(new Series(
+                "test-series",
+                "Test Series",
+                "Test Project",
+                "Pool-Test"
+            ))
+        })
     });
 });
