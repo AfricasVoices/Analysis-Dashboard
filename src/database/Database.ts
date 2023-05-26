@@ -13,9 +13,13 @@ import AnalysisSnapshot, {
     analysisSnapshotConverter,
 } from "./models/AnalysisSnapshot";
 import Series, { seriesConvertor } from "./models/Series";
+import { FirebaseStorage, getDownloadURL, ref } from "firebase/storage";
 
 export default class Database {
-    constructor(private firestore: Firestore) {}
+    constructor(
+        private firestore: Firestore,
+        private storage: FirebaseStorage
+    ) {}
 
     /**
      * Gets the user object for the given series and user email.
@@ -94,5 +98,25 @@ export default class Database {
         const path = `series/${seriesId}`;
         const ref = doc(this.firestore, path).withConverter(seriesConvertor);
         return (await getDoc(ref)).data();
+    }
+
+    /**
+     * Downloads the requested data file from storage.
+     *
+     * @param seriesId
+     * @param snapshotId
+     * @param filename
+     */
+    async getFile(
+        seriesId: string,
+        snapshotId: string,
+        filename: string
+    ): Promise<Response> {
+        const datasetRef = ref(
+            this.storage,
+            `series/${seriesId}/snapshots/${snapshotId}/files/${filename}`
+        );
+        const url = await getDownloadURL(datasetRef);
+        return fetch(url);
     }
 }

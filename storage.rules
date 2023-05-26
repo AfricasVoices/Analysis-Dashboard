@@ -1,7 +1,17 @@
 rules_version = '2'
 
+function loggedIn() {
+  return request.auth != null;
+}
+
 service firebase.storage {
   match /b/{bucket}/o {
-    allow read, write: if false
+    match /series/{seriesId}/snapshots/{snapshotId}/files/{filename} {
+      function getUserDoc() {
+        return firestore.get(/databases/(default)/documents/series/$(seriesId)/users/$(request.auth.token.email));
+      }
+
+      allow read: if loggedIn() && "read" in getUserDoc().data.file_permissions[filename];
+    }
   }
 }
