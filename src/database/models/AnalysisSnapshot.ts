@@ -10,10 +10,7 @@ export class AnalysisSnapshotTag {
 }
 
 export default class AnalysisSnapshot {
-    constructor(
-        public datasets: string[],
-        public tags: AnalysisSnapshotTag[]
-    ) {}
+    constructor(public files: string[], public tags: AnalysisSnapshotTag[]) {}
 
     get uniqueTagCategories(): Set<string> {
         const allTagCategories = this.tags.map((t) => t.tagCategory);
@@ -24,7 +21,7 @@ export default class AnalysisSnapshot {
 export const analysisSnapshotConverter: FirestoreDataConverter<AnalysisSnapshot> =
     {
         toFirestore: (snapshot: AnalysisSnapshot): DocumentData => ({
-            datasets: snapshot.datasets,
+            files: snapshot.files,
             tags: snapshot.tags.map((t) => ({
                 tag_category: t.tagCategory,
             })),
@@ -36,7 +33,7 @@ export const analysisSnapshotConverter: FirestoreDataConverter<AnalysisSnapshot>
         ): AnalysisSnapshot => {
             const data = snapshot.data(options);
             return new AnalysisSnapshot(
-                data["datasets"],
+                data["files"],
                 data["tags"].map(
                     (t: DocumentData) =>
                         new AnalysisSnapshotTag(t["tag_category"])
