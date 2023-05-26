@@ -13,5 +13,16 @@ service cloud.firestore {
     match /{path=**}/users/{userEmail} {
       allow read: if thisUser();
     }
+
+    match /series/{seriesId} {
+      function getUserDoc() {
+        return get(/databases/$(database)/documents/series/$(seriesId)/users/$(request.auth.token.email))
+      }
+
+      match /snapshots/{snapshotId} {
+        allow read: if (loggedIn() && getUserDoc().data.snapshot_permissions["read_all"]) ||
+                       (loggedIn() && resource.data.tag_categories.hasAny(getUserDoc().data.snapshot_permissions["read_tag_categories"]))
+      }
+    }
   }
 }
