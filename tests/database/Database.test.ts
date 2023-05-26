@@ -140,16 +140,29 @@ describe.concurrent("Test Database", () => {
     });
 
     describe.concurrent("Test analysis snapshot read permissions", () => {
-        test("A user with 'read-all' permissions can read all the analysis snapshots in a series", async () => {
+        test("A user with 'read-all' permissions can read all the analysis snapshots in a series via getAnalysisSnapshot()", async () => {
             const db = await getDatabaseForUser("user1@example.com");
             await assertSucceeds(db.getAnalysisSnapshot("series-1", "1"));
             await assertSucceeds(db.getAnalysisSnapshot("series-1", "2"));
         });
 
-        test("A user with 'read-tag-categories' permissions only can only read snapshots that are tagged with one of those categories", async () => {
+        test("A user with 'read-all' permissions can read all the analysis snapshots in a series via getAnalysisSnapshots()", async () => {
+            const db = await getDatabaseForUser("user1@example.com");
+            await assertSucceeds(db.getAnalysisSnapshots("series-1"));
+        });
+
+        test("A user with 'read-tag-categories' permissions only can only read snapshots that are tagged with one of those categories, via getAnalysisSnapshot()", async () => {
             const db = await getDatabaseForUser("user2@example.com");
             await assertFails(db.getAnalysisSnapshot("series-1", "1"));
             await assertSucceeds(db.getAnalysisSnapshot("series-1", "2"));
+        });
+
+        test("A user with 'read-tag-categories' permissions only can only read snapshots that are tagged with one of those categories, via getAnalysisSnapshots()", async () => {
+            const db = await getDatabaseForUser("user2@example.com");
+            await assertFails(db.getAnalysisSnapshots("series-1"));
+            await assertSucceeds(
+                db.getAnalysisSnapshots("series-1", ["latest"])
+            );
         });
     });
 
@@ -166,16 +179,23 @@ describe.concurrent("Test Database", () => {
             );
         });
 
-        test("Can correctly deserialize AnalysisSnapshots", async () => {
+        test("Can correctly deserialize AnalysisSnapshots (via getAnalysisSnapshot() and getAnalysisSnapshots())", async () => {
             const db = await getDatabaseForUser("user1@example.com");
 
+            const expected1 = new AnalysisSnapshot([], []);
+            const expected2 = new AnalysisSnapshot(
+                [],
+                [new AnalysisSnapshotTag("latest")]
+            );
+
             const snapshot1 = await db.getAnalysisSnapshot("series-1", "1");
-            expect(snapshot1).toStrictEqual(new AnalysisSnapshot([], []));
+            expect(snapshot1).toStrictEqual(expected1);
 
             const snapshot2 = await db.getAnalysisSnapshot("series-1", "2");
-            expect(snapshot2).toStrictEqual(
-                new AnalysisSnapshot([], [new AnalysisSnapshotTag("latest")])
-            );
+            expect(snapshot2).toStrictEqual(expected2);
+
+            const all = await db.getAnalysisSnapshots("series-1");
+            expect(all).toStrictEqual([expected1, expected2]);
         });
     });
 });
