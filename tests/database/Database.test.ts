@@ -17,7 +17,6 @@ import SeriesUser, {
     userConvertor,
 } from "../../src/database/models/SeriesUser";
 import Database from "../../src/database/Database";
-import fs from "fs";
 import AnalysisSnapshot, {
     analysisSnapshotConverter,
     AnalysisSnapshotTag,
