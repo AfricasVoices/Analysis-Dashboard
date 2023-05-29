@@ -4,6 +4,7 @@ import {
     assertSucceeds,
     initializeTestEnvironment,
     RulesTestContext,
+    RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
 import {
     doc,
@@ -16,7 +17,6 @@ import SeriesUser, {
     userConvertor,
 } from "../../src/database/models/SeriesUser";
 import Database from "../../src/database/Database";
-import fs from "fs";
 import AnalysisSnapshot, {
     analysisSnapshotConverter,
     AnalysisSnapshotTag,
@@ -70,16 +70,23 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
     );
 }
 
+let testEnv: RulesTestEnvironment;
+async function setUpDatabase() {
+    testEnv = await initializeTestEnvironment({
+        projectId: "avf-dashboards-test",
+        firestore: {},
+    });
+
+    await testEnv.clearFirestore();
+
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+        await writeTestDataToFirestore(context.firestore());
+    });
+}
+
 async function getUserContext(
     userEmail: string | null
 ): Promise<RulesTestContext> {
-    const testEnv = await initializeTestEnvironment({
-        projectId: "avf-dashboards-test",
-        firestore: {
-            rules: fs.readFileSync("firestore.rules", "utf8"),
-        },
-    });
-
     if (userEmail === null) {
         return testEnv.unauthenticatedContext();
     }
@@ -96,26 +103,6 @@ async function getDatabaseForUser(userEmail: string | null): Promise<Database> {
     // type. Both types are compatible with each other, just defined in different places.
     const firestore: Firestore = userContext.firestore();
     return new Database(firestore);
-}
-
-async function setUpDatabase() {
-    const testEnv = await initializeTestEnvironment({
-        projectId: "avf-dashboards-test",
-        firestore: {
-            // Allow global access to everything for now, so we can initialise the database
-            rules:
-                "service cloud.firestore { match /databases/{database}/documents { match /{document=**} { " +
-                "allow read, write: if true;" +
-                "}}}",
-        },
-    });
-
-    await testEnv.clearFirestore();
-
-    const admin = testEnv.unauthenticatedContext();
-    // @ts-ignore because admin.firestore() returns the Firebase v8 type but Database expects the v9
-    // type. Both types are compatible with each other, just defined in different places.
-    await writeTestDataToFirestore(admin.firestore());
 }
 
 describe.concurrent("Test Database", () => {
