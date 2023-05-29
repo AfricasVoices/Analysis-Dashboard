@@ -12,6 +12,7 @@ import SeriesUser, { userConvertor } from "./models/SeriesUser";
 import AnalysisSnapshot, {
     analysisSnapshotConverter,
 } from "./models/AnalysisSnapshot";
+import Series, { seriesConvertor } from "./models/Series";
 
 export default class Database {
     constructor(private firestore: Firestore) {}
@@ -81,5 +82,17 @@ export default class Database {
         }
 
         return (await getDocs(ref)).docs.map((d) => d.data());
+    }
+
+    /**
+     * Gets the specified Series.
+     *
+     * @param seriesId
+     * @return Series object, if it exists, otherwise undefined.
+     */
+    async getSeries(seriesId: string): Promise<Series | undefined> {
+        const path = `series/${seriesId}`;
+        const ref = doc(this.firestore, path).withConverter(seriesConvertor);
+        return (await getDoc(ref)).data();
     }
 }
