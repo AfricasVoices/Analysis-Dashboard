@@ -1,7 +1,26 @@
 rules_version = '2'
 
+function loggedIn() {
+  return request.auth != null;
+}
+
 service firebase.storage {
   match /b/{bucket}/o {
-    allow read, write: if false
+    match /series/{seriesId}/snapshots/{snapshotId}/files/{filename} {
+      function getUserDoc() {
+        return firestore.get(/databases/(default)/documents/series/$(seriesId)/users/$(request.auth.token.email));
+      }
+
+      function getSnapshotDoc() {
+        return firestore.get(/databases/(default)/documents/series/$(seriesId)/snapshots/$(snapshotId));
+      }
+
+      function canReadSnapshot() {
+        return (loggedIn() && getUserDoc().data.snapshot_permissions["read_all"]) ||
+               (loggedIn() && getSnapshotDoc().data.tag_categories.hasAny(getUserDoc().data.snapshot_permissions["read_tag_categories"]));
+      }
+
+      allow read: if loggedIn() && canReadSnapshot() && "read" in getUserDoc().data.file_permissions[filename];
+    }
   }
 }

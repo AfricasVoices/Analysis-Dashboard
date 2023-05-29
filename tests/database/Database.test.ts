@@ -12,6 +12,7 @@ import {
     FirestoreDataConverter,
     setDoc,
 } from "firebase/firestore";
+import { FirebaseStorage, ref, uploadString } from "firebase/storage";
 import SeriesUser, {
     SnapshotPermissions,
     userConvertor,
@@ -49,7 +50,7 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
             data: new SeriesUser(
                 "user1@example.com",
                 new SnapshotPermissions(true, []),
-                new Map()
+                new Map([["test_file_1.txt", ["read"]]])
             ),
             convertor: userConvertor,
         },
@@ -58,18 +59,30 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
             data: new SeriesUser(
                 "user2@example.com",
                 new SnapshotPermissions(false, ["latest"]),
+                new Map([["test_file_1.txt", ["read"]]])
+            ),
+            convertor: userConvertor,
+        },
+        {
+            path: "series/series-1/users/user3@example.com",
+            data: new SeriesUser(
+                "user3@example.com",
+                new SnapshotPermissions(true, []),
                 new Map()
             ),
             convertor: userConvertor,
         },
         {
             path: "series/series-1/snapshots/1",
-            data: new AnalysisSnapshot([], []),
+            data: new AnalysisSnapshot(["test_file_1.txt"], []),
             convertor: analysisSnapshotConverter,
         },
         {
             path: "series/series-1/snapshots/2",
-            data: new AnalysisSnapshot([], [new AnalysisSnapshotTag("latest")]),
+            data: new AnalysisSnapshot(
+                ["test_file_1.txt"],
+                [new AnalysisSnapshotTag("latest")]
+            ),
             convertor: analysisSnapshotConverter,
         },
     ];
@@ -85,17 +98,38 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
     );
 }
 
+async function writeTestDataToStorage(storage: FirebaseStorage) {
+    const storageData = new Map<string, string>(
+        Object.entries({
+            "series/series-1/snapshots/1/files/test_file_1.txt":
+                "Test Dataset 1 v1",
+            "series/series-1/snapshots/2/files/test_file_1.txt":
+                "Test Dataset 1 v2",
+            "series/series-1/snapshots/1/files/test_file_2.txt":
+                "Test Dataset 2",
+        })
+    );
+
+    for (const [path, data] of storageData) {
+        const blobRef = ref(storage, path);
+        await uploadString(blobRef, data);
+    }
+}
+
 let testEnv: RulesTestEnvironment;
 async function setUpDatabase() {
     testEnv = await initializeTestEnvironment({
-        projectId: "avf-dashboards-test",
+        projectId: "avf-analysis-dashboard",
         firestore: {},
+        storage: {},
     });
 
     await testEnv.clearFirestore();
+    await testEnv.clearStorage();
 
     await testEnv.withSecurityRulesDisabled(async (context) => {
         await writeTestDataToFirestore(context.firestore());
+        await writeTestDataToStorage(context.storage());
     });
 }
 
@@ -117,7 +151,8 @@ async function getDatabaseForUser(userEmail: string | null): Promise<Database> {
     // @ts-ignore because userContext.firestore() returns the Firebase v8 type but Database expects the v9
     // type. Both types are compatible with each other, just defined in different places.
     const firestore: Firestore = userContext.firestore();
-    return new Database(firestore);
+    const storage: FirebaseStorage = userContext.storage();
+    return new Database(firestore, storage);
 }
 
 describe.concurrent("Test Database", () => {
@@ -168,6 +203,32 @@ describe.concurrent("Test Database", () => {
         });
     });
 
+    describe.concurrent("Test Firebase Storage read permissions", () => {
+        test("A user with read-all permissions can read all versions of a file", async () => {
+            const db = await getDatabaseForUser("user1@example.com");
+            await assertSucceeds(
+                db.getFile("series-1", "1", "test_file_1.txt")
+            );
+            await assertSucceeds(
+                db.getFile("series-1", "2", "test_file_1.txt")
+            );
+        });
+
+        test("A user with read-tagged permissions can only read tagged versions of a file", async () => {
+            const db = await getDatabaseForUser("user2@example.com");
+            await assertFails(db.getFile("series-1", "1", "test_file_1.txt"));
+            await assertSucceeds(
+                db.getFile("series-1", "2", "test_file_1.txt")
+            );
+        });
+
+        test("A user without read permissions cannot read a file", async () => {
+            const db = await getDatabaseForUser("user3@example.com");
+            await assertFails(db.getFile("series-1", "1", "test_file_1.txt"));
+            await assertFails(db.getFile("series-1", "1", "test_file_2.txt"));
+        });
+    });
+
     describe.concurrent("Test Database get methods", () => {
         test("Can correctly deserialize SeriesUsers", async () => {
             const db = await getDatabaseForUser("user1@example.com");
@@ -176,7 +237,7 @@ describe.concurrent("Test Database", () => {
                 new SeriesUser(
                     "user1@example.com",
                     new SnapshotPermissions(true, []),
-                    new Map()
+                    new Map([["test_file_1.txt", ["read"]]])
                 )
             );
         });
@@ -184,9 +245,9 @@ describe.concurrent("Test Database", () => {
         test("Can correctly deserialize AnalysisSnapshots (via getAnalysisSnapshot() and getAnalysisSnapshots())", async () => {
             const db = await getDatabaseForUser("user1@example.com");
 
-            const expected1 = new AnalysisSnapshot([], []);
+            const expected1 = new AnalysisSnapshot(["test_file_1.txt"], []);
             const expected2 = new AnalysisSnapshot(
-                [],
+                ["test_file_1.txt"],
                 [new AnalysisSnapshotTag("latest")]
             );
 
@@ -212,6 +273,17 @@ describe.concurrent("Test Database", () => {
                     "Pool-Test"
                 )
             );
+        });
+
+        test("Can correctly fetch blobs from Storage", async () => {
+            const db = await getDatabaseForUser("user1@example.com");
+            const request = await db.getFile(
+                "series-1",
+                "1",
+                "test_file_1.txt"
+            );
+            const data = await request.text();
+            expect(data).toBe("Test Dataset 1 v1");
         });
     });
 });
