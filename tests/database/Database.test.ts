@@ -59,6 +59,15 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
             data: new SeriesUser(
                 "user2@example.com",
                 new SnapshotPermissions(false, ["latest"]),
+                new Map([["test_file_1.txt", ["read"]]])
+            ),
+            convertor: userConvertor,
+        },
+        {
+            path: "series/series-1/users/user3@example.com",
+            data: new SeriesUser(
+                "user3@example.com",
+                new SnapshotPermissions(true, []),
                 new Map()
             ),
             convertor: userConvertor,
@@ -70,7 +79,10 @@ async function writeTestDataToFirestore(firestore: Firestore): Promise<void> {
         },
         {
             path: "series/series-1/snapshots/2",
-            data: new AnalysisSnapshot([], [new AnalysisSnapshotTag("latest")]),
+            data: new AnalysisSnapshot(
+                ["test_file_1.txt"],
+                [new AnalysisSnapshotTag("latest")]
+            ),
             convertor: analysisSnapshotConverter,
         },
     ];
@@ -90,7 +102,9 @@ async function writeTestDataToStorage(storage: FirebaseStorage) {
     const storageData = new Map<string, string>(
         Object.entries({
             "series/series-1/snapshots/1/files/test_file_1.txt":
-                "Test Dataset 1",
+                "Test Dataset 1 v1",
+            "series/series-1/snapshots/2/files/test_file_1.txt":
+                "Test Dataset 1 v2",
             "series/series-1/snapshots/1/files/test_file_2.txt":
                 "Test Dataset 2",
         })
@@ -190,16 +204,28 @@ describe.concurrent("Test Database", () => {
     });
 
     describe.concurrent("Test Firebase Storage read permissions", () => {
-        test("A user with read permissions can read a file", async () => {
+        test("A user with read-all permissions can read all versions of a file", async () => {
             const db = await getDatabaseForUser("user1@example.com");
             await assertSucceeds(
                 db.getFile("series-1", "1", "test_file_1.txt")
             );
+            await assertSucceeds(
+                db.getFile("series-1", "2", "test_file_1.txt")
+            );
+        });
+
+        test("A user with read-tagged permissions can only read tagged versions of a file", async () => {
+            const db = await getDatabaseForUser("user2@example.com");
+            await assertFails(db.getFile("series-1", "1", "test_file_1.txt"));
+            await assertSucceeds(
+                db.getFile("series-1", "2", "test_file_1.txt")
+            );
         });
 
         test("A user without read permissions cannot read a file", async () => {
-            const db = await getDatabaseForUser("user2@example.com");
+            const db = await getDatabaseForUser("user3@example.com");
             await assertFails(db.getFile("series-1", "1", "test_file_1.txt"));
+            await assertFails(db.getFile("series-1", "1", "test_file_2.txt"));
         });
     });
 
@@ -221,7 +247,7 @@ describe.concurrent("Test Database", () => {
 
             const expected1 = new AnalysisSnapshot(["test_file_1.txt"], []);
             const expected2 = new AnalysisSnapshot(
-                [],
+                ["test_file_1.txt"],
                 [new AnalysisSnapshotTag("latest")]
             );
 
@@ -257,7 +283,7 @@ describe.concurrent("Test Database", () => {
                 "test_file_1.txt"
             );
             const data = await request.text();
-            expect(data).toBe("Test Dataset 1");
+            expect(data).toBe("Test Dataset 1 v1");
         });
     });
 });
