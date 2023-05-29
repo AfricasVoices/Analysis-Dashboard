@@ -106,6 +106,7 @@ export default class Database {
      * @param seriesId
      * @param snapshotId
      * @param filename
+     * @return an in-progress fetch() Response
      */
     async getFile(
         seriesId: string,
