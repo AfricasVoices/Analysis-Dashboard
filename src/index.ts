@@ -35,9 +35,10 @@ authController.onSignedInUserChanged(async (user) => {
         );
 
     const chartsContainer = document.getElementById("charts-container");
+
     episodes.forEach((episode: DatasetAnalysis) => {
         const episodeTitle = document.createElement("div");
-        episodeTitle.innerHTML = `<b>${episode.episodeId}</b>`;
+        episodeTitle.innerHTML = `<b>${episode.episodeId}</b> (${episode.totalRelevantParticipants} relevant participants)`;
         chartsContainer!.appendChild(episodeTitle);
 
         const chart = document.createElement("div");
