@@ -5,9 +5,29 @@
         <title>Analysis Dashboard</title>
 
         <script type="module" src="src/index.ts"></script>
+        <style>
+            body {
+                font-family: sans-serif;
+            }
+
+            #root-container {
+                display: flex;
+                flex-wrap: wrap;
+                flex-direction: column;
+                align-content: center;
+            }
+
+            #charts-container {
+                min-width: 600px;
+            }
+        </style>
     </head>
     <body>
-        <h1>Analysis Dashboard</h1>
-        <div id="signed-in-user">Waiting for authorisation state...</div>
+        <div id="root-container">
+            <h1>Analysis Dashboard</h1>
+            <div id="signed-in-user">Waiting for authorisation state...</div>
+            <p></p>
+            <div id="charts-container"></div>
+        </div>
     </body>
 </html>
