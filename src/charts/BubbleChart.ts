@@ -56,7 +56,11 @@ type LayoutDatum = {
 export default class BubbleChart {
     private chart: EChartsType;
 
-    constructor(private container: HTMLElement, private data: DatasetAnalysis) {
+    constructor(
+        private container: HTMLElement,
+        private data: DatasetAnalysis,
+        private voices: any
+    ) {
         echarts.use([
             SVGRenderer,
             ToolboxComponent,
@@ -73,7 +77,7 @@ export default class BubbleChart {
             renderer: "svg",
         });
 
-        this.updateData(data);
+        this.updateData(data, voices);
     }
 
     private computeLayoutData(data: ThemeAnalysis[]): LayoutDatum[] {
@@ -161,17 +165,11 @@ export default class BubbleChart {
         };
     }
 
-    private getVoiceHTML({
-        text,
-        infoText,
-    }: {
-        text: string;
-        infoText: string;
-    }): string {
-        return `<div class="bubble-chart-voice-container"><em>"${text}"</em> - ${infoText}</div>`;
-    }
-
-    private getTooltipHTML(theme: ThemeAnalysis, dataset: DatasetAnalysis) {
+    private getTooltipHTML(
+        theme: ThemeAnalysis,
+        dataset: DatasetAnalysis,
+        voices: any
+    ) {
         const displayText = theme.displayText;
         const themeParticipants = theme.totalConsentingParticipants;
         const datasetParticipants = dataset.totalRelevantParticipants;
@@ -186,49 +184,26 @@ export default class BubbleChart {
             minimumFractionDigits: 1,
         });
 
-       const rotate = function(nums, k) {
-
-  for (let i = 0; i < k; i++) {
-      nums.unshift(nums.pop());
-  }
-
-  return nums;
-}
-
-        const voices = [
-            {
-                text: "Waan idi salaamay waxay samayn karaan isku dhuumni iyo wada shapeen dhalinyarada dhexmarta",
-                textEn: "Greetings, what the youth can do is to be united and work together",
-                infoText: "Man, 18, Jowhar",
-            },
-            {
-                text: "Waa inay ogaadaan inay walaalo yihiin dhalin yaradu meel walba oo ay joogaan oo diidaan in ayaga la iskudiro",
-                textEn: "The youth should know that they are brothers wherever they are and should not allow anyone to instigate disagreements between them",
-                infoText: "Man, 37, Galkacyo",
-            },
-            {
-                text: "Waa inay Qabiil iska dhaafaan oo ay Qaran wada noqdaan",
-                textEn: "They should put an end to tribalism and unite as one nation",
-                infoText: "Woman, 18, Galkacyo"
-            },
-            {
-                text: "Waxaaysameynkaraan.aragti.iyo.figrado.kaladuwansilooga.hortago.xagjirnimada\n",
-                textEn: "They can bring diverse ideas and perspectives on how to prevent extremism",
-                infoText: "Man, 23, Recently Displaced"
-            }
-        ];
-
         return `
             <div>
                 <b>${displayText}:</b> ${themeParticipants} ${participantsText} (${participantsPercentageStr})
             </div>
             
-            ${rotate(voices, displayText.length).slice(0, 3).map(this.getVoiceHTML).join("<p></p>")}
+            ${voices.slice(0, 3).map(this.getVoiceHTML).join("<p></p>")}
         `;
     }
 
-    updateData(data: DatasetAnalysis): void {
+    updateData(data: DatasetAnalysis, voices: any): void {
         this.data = data;
+        voices = voices
+            .map((v: any) => {
+                let infoText = [v.gender, v.age, v.district]
+                    .filter((x) => x != null)
+                    .join(", ");
+                return { ...v, infoText };
+            })
+            .slice(50);
+        this.voices = voices;
 
         const layoutData: LayoutDatum[] = this.computeLayoutData(
             this.data.normalThemeDistributions()
@@ -245,7 +220,7 @@ export default class BubbleChart {
                     params: CallbackDataParams | CallbackDataParams[]
                 ): string => {
                     // @ts-ignore because params.data is guaranteed to be of type LayoutParams for this dataset
-                    return this.getTooltipHTML(params.data, data);
+                    return this.getTooltipHTML(params.data, data, voices);
                 },
             },
             dataset: {

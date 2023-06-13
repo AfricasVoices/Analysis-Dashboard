@@ -5,6 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { DatasetAnalysis } from "./database/files/ThemeDistributions";
 import BubbleChart from "./charts/BubbleChart";
+import { renderSampleMessages } from "./charts/SampleMessages";
 
 // Initialize Firebase
 const firebaseApp = getFirebaseApp();
@@ -36,6 +37,10 @@ authController.onSignedInUserChanged(async (user) => {
 
     const chartsContainer = document.getElementById("charts-container");
 
+    const voices = await (
+        await fetch("/theme_distribution_samples.json")
+    ).json();
+
     episodes.forEach((episode: DatasetAnalysis) => {
         const episodeTitle = document.createElement("div");
         episodeTitle.innerHTML = `<b>${episode.episodeId}</b> (${episode.totalRelevantParticipants} relevant participants)`;
@@ -44,6 +49,8 @@ authController.onSignedInUserChanged(async (user) => {
         const chart = document.createElement("div");
         chartsContainer!.appendChild(chart);
 
-        new BubbleChart(chart, episode);
+        // new BubbleChart(chart, episode, voices);
+
+        chart.innerHTML = renderSampleMessages(voices);
     });
 });
