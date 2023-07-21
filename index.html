@@ -7,7 +7,8 @@
         <script type="module" src="src/index.ts"></script>
         <style>
             body {
-                font-family: sans-serif;
+                font-family: "Helvetica Neue", sans-serif;
+                font-size: 0.8rem;
             }
 
             #root-container {
@@ -18,14 +19,69 @@
             }
 
             #charts-container {
-                min-width: 600px;
+                width: 800px;
+            }
+
+            table,
+            th,
+            td {
+                border-collapse: collapse;
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+
+            .demogs-container {
+                display: flex;
+                justify-content: center;
+            }
+
+            .voices-container {
+                columns: 260px;
+                column-gap: 8px;
             }
 
             .bubble-chart-voice-container {
                 max-width: 600px;
-                margin-left: 20px;
+                margin-top: 10px;
                 white-space: normal;
                 word-wrap: anywhere;
+                display: inline-block;
+            }
+
+            .bubble-chart-voice-text {
+                /*background-color: var(--theme-color);*/
+                background-color: #e8e8e8;
+                color: black;
+                border-radius: 8px;
+                padding: 6px 8px;
+                position: relative;
+                margin-bottom: 4px;
+            }
+
+            .bubble-chart-voice-text:after {
+                content: "";
+                position: absolute;
+                display: block;
+                width: 0;
+                z-index: 1;
+                border-style: solid;
+                border-width: 10px 10px 0;
+                border-color: #e8e8e8 transparent;
+                bottom: -6px;
+                font-size: 16px;
+                left: 16px;
+                margin-left: -10px;
+            }
+
+            .bubble-chart-voice-info {
+                text-align: left;
+                color: gray;
+                margin-top: 6px;
+                font-size: 0.8rem;
             }
         </style>
     </head>

@@ -168,8 +168,8 @@ export default class BubbleChart {
     private getTooltipHTML(
         theme: ThemeAnalysis,
         dataset: DatasetAnalysis,
-        voices: any
-    ) {
+        color: string
+    ): string {
         const displayText = theme.displayText;
         const themeParticipants = theme.totalConsentingParticipants;
         const datasetParticipants = dataset.totalRelevantParticipants;
@@ -185,12 +185,9 @@ export default class BubbleChart {
         });
 
         return `
-            <div>
+            <div style="text-align: center">
                 <b>${displayText}:</b> ${themeParticipants} ${participantsText} (${participantsPercentageStr})
-            </div>
-            
-            ${voices.slice(0, 3).map(this.getVoiceHTML).join("<p></p>")}
-        `;
+            </div>`;
     }
 
     updateData(data: DatasetAnalysis, voices: any): void {
@@ -220,8 +217,9 @@ export default class BubbleChart {
                     params: CallbackDataParams | CallbackDataParams[]
                 ): string => {
                     // @ts-ignore because params.data is guaranteed to be of type LayoutParams for this dataset
-                    return this.getTooltipHTML(params.data, data, voices);
+                    return this.getTooltipHTML(params.data, data, params.color);
                 },
+                // confine: true
             },
             dataset: {
                 source: layoutData,
