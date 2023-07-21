@@ -3,8 +3,12 @@ import AuthController from "./auth/AuthController";
 import Database from "./database/Database";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { DatasetAnalysis } from "./database/files/ThemeDistributions";
-import BubbleChart from "./charts/BubbleChart";
+import {
+    DatasetAnalysis,
+    ThemeAnalysis,
+    ThemeType,
+} from "./database/files/ThemeDistributions";
+import PieChart from "./charts/PieChart";
 import { renderSampleMessages } from "./charts/SampleMessages";
 
 // Initialize Firebase
@@ -41,16 +45,92 @@ authController.onSignedInUserChanged(async (user) => {
         await fetch("/theme_distribution_samples.json")
     ).json();
 
-    episodes.forEach((episode: DatasetAnalysis) => {
+    const demogs = [
+        new DatasetAnalysis(
+            "Gender",
+            [
+                new ThemeAnalysis(
+                    "scheme",
+                    "code",
+                    "Man",
+                    "man",
+                    ThemeType.Normal,
+                    62
+                ),
+                new ThemeAnalysis(
+                    "scheme",
+                    "code",
+                    "Woman",
+                    "woman",
+                    ThemeType.Normal,
+                    43
+                ),
+            ],
+            0
+        ),
+        new DatasetAnalysis(
+            "State",
+            [
+                new ThemeAnalysis(
+                    "scheme",
+                    "code",
+                    "Galmadug",
+                    "galmadug",
+                    ThemeType.Normal,
+                    60
+                ),
+                new ThemeAnalysis(
+                    "scheme",
+                    "code",
+                    "Jubbaland",
+                    "jubbaland",
+                    ThemeType.Normal,
+                    25
+                ),
+                new ThemeAnalysis(
+                    "scheme",
+                    "code",
+                    "Puntland",
+                    "puntland",
+                    ThemeType.Normal,
+                    10
+                ),
+            ],
+            0
+        ),
+    ];
+
+    episodes.slice(0, 1).forEach((episode: DatasetAnalysis) => {
         const episodeTitle = document.createElement("div");
-        episodeTitle.innerHTML = `<b>${episode.episodeId}</b> (${episode.totalRelevantParticipants} relevant participants)`;
+        episodeTitle.innerHTML = `
+            <p>
+                <b>${episode.episodeId}</b> (${episode.totalRelevantParticipants} relevant participants)
+            </p>
+            <div><b>Awareness Creation</b></div>
+        `;
         chartsContainer!.appendChild(episodeTitle);
 
-        const chart = document.createElement("div");
-        chartsContainer!.appendChild(chart);
+        const episodeContainer = document.createElement("div");
+        episodeContainer.classList.add("episode-container")
+        chartsContainer!.appendChild(episodeContainer);
 
         // new BubbleChart(chart, episode, voices);
+        // new PieChart(chart, episode);
 
-        chart.innerHTML = renderSampleMessages(voices);
+        const demogsContainer = document.createElement("div");
+        demogsContainer.classList.add("demogs-container")
+        episodeContainer.appendChild(demogsContainer)
+
+        demogs.forEach(demog => {
+            const demogContainer = document.createElement("span");
+            demogsContainer.appendChild(demogContainer)
+
+            new PieChart(demogContainer, demog);
+        })
+
+        const voicesContainer = document.createElement("div");
+        voicesContainer.classList.add("voices-container")
+        voicesContainer.innerHTML = renderSampleMessages(voices);
+        episodeContainer.appendChild(voicesContainer)
     });
 });
