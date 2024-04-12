@@ -1,5 +1,4 @@
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
-import fetch from "node-fetch";
 import { expect, test, describe, beforeAll } from "vitest";
 import {
     assertSucceeds,
@@ -11,7 +10,7 @@ describe("Test the connection to the Firebase Storage emulator is working", asyn
     let testEnv: RulesTestEnvironment;
     beforeAll(async () => {
         testEnv = await initializeTestEnvironment({
-            projectId: "avf-dashboards-test",
+            projectId: "avf-analysis-dashboard",
             storage: {},
         });
 
